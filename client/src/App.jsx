@@ -34,6 +34,7 @@ const defaultAuthForm = {
   name: "",
   email: "",
   password: "",
+  confirmPassword: "",
 };
 
 const getPlanMap = () =>
@@ -42,10 +43,28 @@ const getPlanMap = () =>
     return accumulator;
   }, {});
 
-function AuthScreen({ mode, form, loading, error, onToggleMode, onChange, onSubmit, onGuestStart }) {
+function AuthScreen({ mode, form, loading, error, onToggleMode, onChange, onSubmit, onGuestStart, theme, onToggleTheme }) {
+  const showPasswordHint = mode === "register" && form.confirmPassword.length > 0;
+  const passwordsMatch = form.password === form.confirmPassword;
+
   return (
     <main className="auth-shell">
       <section className="auth-card panel">
+        <div className="auth-theme-toggle">
+          <div className="theme-toggle-wrapper" onClick={onToggleTheme} role="button" tabIndex={0} aria-label="Toggle theme">
+            <span className={`theme-text ${theme === "light" ? "active" : ""}`}>Light</span>
+            <div className={`theme-toggle-pill ${theme}`}>
+              <div className="moon-stars">
+                <span className="moon-star star-sz-lg" style={{ top: "6px", left: "10px" }}></span>
+                <span className="moon-star star-sz-sm" style={{ top: "6px", left: "30px" }}></span>
+                <span className="moon-star star-sz-sm" style={{ top: "16px", left: "6px" }}></span>
+                <span className="moon-star star-sz-md" style={{ top: "18px", left: "18px" }}></span>
+              </div>
+              <div className="theme-thumb"></div>
+            </div>
+            <span className={`theme-text ${theme === "dark" ? "active" : ""}`}>Dark</span>
+          </div>
+        </div>
           <p className="eyebrow">Weekly habit tracker</p>
         <h1>Login to your habit dashboard</h1>
         <p className="hero-copy">
@@ -83,6 +102,27 @@ function AuthScreen({ mode, form, loading, error, onToggleMode, onChange, onSubm
             Password
             <input name="password" type="password" value={form.password} onChange={onChange} placeholder="At least 6 characters" required />
           </label>
+
+          {mode === "register" ? (
+            <>
+              <label>
+                Confirm Password
+                <input
+                  name="confirmPassword"
+                  type="password"
+                  value={form.confirmPassword}
+                  onChange={onChange}
+                  placeholder="Re-enter your password"
+                  required
+                />
+              </label>
+              {showPasswordHint ? (
+                <p className={`password-match-hint ${passwordsMatch ? "match" : "mismatch"}`}>
+                  {passwordsMatch ? "Passwords match" : "Passwords do not match"}
+                </p>
+              ) : null}
+            </>
+          ) : null}
 
           <button type="submit" className="primary-button auth-submit" disabled={loading}>
             {loading ? "Please wait..." : mode === "login" ? "Login" : "Create account"}
@@ -396,18 +436,37 @@ export default function App() {
     try {
       setAuthLoading(true);
       setAuthError("");
+
+      if (authMode === "register" && authForm.password !== authForm.confirmPassword) {
+        const message = "Passwords do not match";
+        setAuthError(message);
+        toast.error(message);
+        return;
+      }
+
       const payload = {
         name: authForm.name,
         email: authForm.email,
         password: authForm.password,
       };
-      const result = authMode === "login" ? await login(payload) : await register(payload);
-      localStorage.setItem(authStorageKey, result.token);
-      setUser(result.user);
-      setAuthForm(defaultAuthForm);
-      resetAppState();
-      setAppReady(false);
-      toast.success(authMode === "login" ? "Logged in successfully!" : "Account created!");
+
+      if (authMode === "login") {
+        const result = await login(payload);
+        localStorage.setItem(authStorageKey, result.token);
+        setUser(result.user);
+        setAuthForm(defaultAuthForm);
+        resetAppState();
+        setAppReady(false);
+        toast.success("Logged in successfully!");
+      } else {
+        await register(payload);
+        setAuthMode("login");
+        setAuthForm({
+          ...defaultAuthForm,
+          email: payload.email,
+        });
+        toast.success("Account created! Please login.");
+      }
     } catch (authError) {
       setAuthError(authError.message);
       toast.error(authError.message);
@@ -449,6 +508,8 @@ export default function App() {
         form={authForm}
         loading={authLoading}
         error={authError}
+        theme={theme}
+        onToggleTheme={toggleTheme}
         onToggleMode={setAuthMode}
         onChange={(event) => setAuthForm((current) => ({ ...current, [event.target.name]: event.target.value }))}
         onSubmit={handleAuthSubmit}

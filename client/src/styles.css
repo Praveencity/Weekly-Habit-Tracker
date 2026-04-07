@@ -94,6 +94,12 @@ button {
   padding: 30px;
 }
 
+.auth-theme-toggle {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
 .auth-toggle {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -110,6 +116,20 @@ button {
   display: grid;
   gap: 10px;
   color: var(--muted);
+}
+
+.password-match-hint {
+  margin: -6px 0 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.password-match-hint.match {
+  color: var(--success);
+}
+
+.password-match-hint.mismatch {
+  color: var(--danger);
 }
 
 .auth-submit {
