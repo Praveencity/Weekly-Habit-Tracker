@@ -1203,14 +1203,53 @@ textarea {
   .planner-task-row,
   .database-row {
     grid-template-columns: 1fr;
+    min-width: 0;
+  }
+
+  .planner-task-list {
+    overflow-x: visible;
+    padding-bottom: 0;
+  }
+
+  .planner-task-row {
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .planner-task-row > input,
+  .planner-task-row > select,
+  .planner-task-row > button {
+    width: 100%;
+    min-height: 46px;
   }
 
   .task-time-range {
+    display: grid;
     grid-template-columns: 1fr;
+    gap: 8px;
   }
 
   .time-separator {
     display: none;
+  }
+
+  .task-time-range input {
+    min-width: 0;
+  }
+
+  .planner-copy-bar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planner-copy-form {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .planner-copy-form select,
+  .planner-copy-form button {
+    width: 100%;
   }
 
   .planner-table-head {
@@ -1309,6 +1348,11 @@ textarea {
   .calendar-cell,
   .calendar-cell button {
     min-height: 46px;
+  }
+
+  .add-task-button,
+  .save-button {
+    width: 100%;
   }
 
   .calendar-day-number,
