@@ -1,6 +1,9 @@
 import mongoose from "mongoose";
 
 export const connectDatabase = async () => {
+  // Fail fast on queries when DB is unavailable instead of buffering for 10s+
+  mongoose.set("bufferCommands", false);
+
   try {
     const mongoUri =
       process.env.MONGODB_URI ||
@@ -17,8 +20,5 @@ export const connectDatabase = async () => {
     console.log(`MongoDB connected: ${connection.connection.host}`);
   } catch (error) {
     console.error("MongoDB connection failed:", error.message);
-    if (process.env.NODE_ENV === "production") {
-      process.exit(1);
-    }
   }
 };
