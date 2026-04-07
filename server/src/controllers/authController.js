@@ -1,5 +1,6 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import mongoose from "mongoose";
 import User from "../models/User.js";
 
 const createToken = (userId) =>
@@ -13,8 +14,20 @@ const serializeUser = (user) => ({
   email: user.email,
 });
 
+const ensureDatabaseConnected = (response) => {
+  // readyState: 1 = connected
+  if (mongoose.connection.readyState !== 1) {
+    response.status(503).json({ message: "Database is temporarily unavailable. Please try again in a moment." });
+    return false;
+  }
+
+  return true;
+};
+
 export const register = async (request, response, next) => {
   try {
+    if (!ensureDatabaseConnected(response)) return;
+
     const name = String(request.body.name || "").trim();
     const email = String(request.body.email || "").trim().toLowerCase();
     const password = String(request.body.password || "");
@@ -40,6 +53,8 @@ export const register = async (request, response, next) => {
 
 export const login = async (request, response, next) => {
   try {
+    if (!ensureDatabaseConnected(response)) return;
+
     const email = String(request.body.email || "").trim().toLowerCase();
     const password = String(request.body.password || "");
 
