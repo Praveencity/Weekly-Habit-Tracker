@@ -1,6 +1,7 @@
 import cors from "cors";
 import dotenv from "dotenv";
 import express from "express";
+import mongoose from "mongoose";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -24,7 +25,11 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.get("/api/health", (request, response) => {
-  response.json({ status: "ok", message: "DayTask habit API is running" });
+  response.json({
+    status: "ok",
+    message: "DayTask habit API is running",
+    dbReadyState: mongoose.connection.readyState,
+  });
 });
 
 app.use("/api/auth", authRoutes);
