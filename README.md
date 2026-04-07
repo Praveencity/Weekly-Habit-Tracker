@@ -1,5 +1,7 @@
 # DayTask MERN
 
+Yes, this project is vibe coded completely.
+
 A MERN habit tracker for weekday routines, daily checkoffs, streaks, login/logout accounts, and a month calendar that shows habit completion status.
 
 ## Stack
