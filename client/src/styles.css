@@ -1012,6 +1012,7 @@ textarea {
   
   .navbar-actions {
     flex-wrap: wrap;
+    width: 100%;
   }
   
   .navbar-user {
@@ -1057,24 +1058,99 @@ textarea {
   .database-table-head span:nth-child(5) {
     display: none;
   }
+
+  .timer-widget {
+    flex-wrap: wrap;
+    padding: 18px 18px 20px;
+  }
+
+  .timer-countdown {
+    width: 100%;
+    text-align: center;
+    font-size: 1.9rem;
+  }
+
+  .calendar-panel {
+    position: static;
+  }
 }
 
 @media (max-width: 640px) {
   .app-layout {
     width: min(100% - 20px, 100%);
-    padding: 16px 0 30px;
+    padding: 12px 0 26px;
+  }
+
+  .auth-shell {
+    padding: 14px;
+  }
+
+  .auth-card {
+    padding: 20px 18px;
+    border-radius: 24px;
+  }
+
+  .auth-theme-toggle {
+    justify-content: center;
+    margin-bottom: 12px;
+  }
+
+  .auth-toggle {
+    grid-template-columns: 1fr;
+  }
+
+  .auth-submit,
+  .auth-toggle button,
+  .navbar-actions .ghost-button,
+  .navbar-actions .primary-button {
+    width: 100%;
+  }
+
+  .navbar {
+    padding: 16px 16px 18px;
+    margin-bottom: 16px;
+    border-radius: 24px;
+  }
+
+  .navbar-brand .eyebrow {
+    font-size: 1.5rem;
+  }
+
+  .navbar-actions {
+    gap: 10px;
+  }
+
+  .navbar-actions > * {
+    width: 100%;
   }
 
   .panel,
   .form-panel,
   .filters-panel,
   .list-shell,
-  .hero {
-    border-radius: 20px;
+  .hero,
+  .summary-grid .stat-card,
+  .dashboard-main > .panel,
+  .dashboard-side > .panel,
+  .dashboard-bottom .panel {
+    border-radius: 18px;
+  }
+
+  .summary-grid {
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 18px;
+  }
+
+  .stat-card strong {
+    font-size: 1.8rem;
   }
 
   .weekday-tabs {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
   }
 
   .grid-2,
@@ -1089,6 +1165,22 @@ textarea {
     flex-direction: column;
   }
 
+  .task-actions,
+  .hero-actions,
+  .calendar-nav,
+  .planner-copy-form,
+  .checklist-actions,
+  .navbar-actions {
+    width: 100%;
+  }
+
+  .task-actions button,
+  .planner-copy-form button,
+  .checklist-actions button,
+  .calendar-nav .ghost-button {
+    width: 100%;
+  }
+
   .task-footer select {
     min-width: 0;
     width: 100%;
@@ -1101,7 +1193,7 @@ textarea {
   }
 
   .database-panel {
-    padding: 18px;
+    padding: 16px;
   }
 
   .database-table-head {
@@ -1127,7 +1219,106 @@ textarea {
 
   .calendar-cell,
   .calendar-cell button {
-    min-height: 56px;
+    min-height: 52px;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-cell {
+    padding: 6px 7px;
+  }
+
+  .calendar-heading h2 {
+    font-size: 1rem;
+  }
+
+  .calendar-legend {
+    justify-content: space-between;
+    font-size: 0.74rem;
+  }
+
+  .timer-title {
+    font-size: 1.1rem;
+  }
+
+  .timer-details {
+    width: 100%;
+  }
+
+  .timer-widget .ghost-button,
+  .timer-widget .primary-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 420px) {
+  .app-layout {
+    width: calc(100% - 14px);
+    padding: 10px 0 22px;
+  }
+
+  .navbar {
+    padding: 14px 14px 16px;
+  }
+
+  .navbar-brand .eyebrow,
+  .eyebrow {
+    font-size: 1.35rem;
+  }
+
+  .hero h1,
+  .auth-card h1 {
+    font-size: clamp(1.8rem, 8vw, 2.35rem);
+    line-height: 1.1;
+  }
+
+  .hero-copy,
+  .auth-card .hero-copy {
+    font-size: 0.96rem;
+    line-height: 1.65;
+  }
+
+  .weekday-tabs {
+    grid-template-columns: 1fr;
+  }
+
+  .task-card,
+  .panel,
+  .form-panel,
+  .filters-panel,
+  .list-shell,
+  .hero,
+  .auth-card,
+  .timer-widget {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+
+  .task-meta,
+  .task-footer,
+  .task-card-top {
+    gap: 10px;
+  }
+
+  .task-description {
+    line-height: 1.55;
+  }
+
+  .calendar-cell,
+  .calendar-cell button {
+    min-height: 46px;
+  }
+
+  .calendar-day-number,
+  .calendar-status-symbol {
+    font-size: 0.8rem;
+  }
+
+  .loading-banner,
+  .error-banner {
+    padding: 14px 16px;
   }
 }
 
