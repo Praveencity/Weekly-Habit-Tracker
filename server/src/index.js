@@ -5,7 +5,7 @@ import mongoose from "mongoose";
 import morgan from "morgan";
 import path from "path";
 import { fileURLToPath } from "url";
-import { connectDatabase } from "./config/db.js";
+import { connectDatabase, getDatabaseDiagnostics } from "./config/db.js";
 import { errorHandler, notFound } from "./middleware/errorHandler.js";
 import authRoutes from "./routes/authRoutes.js";
 import habitRoutes from "./routes/habitRoutes.js";
@@ -25,10 +25,13 @@ app.use(express.json());
 app.use(morgan("dev"));
 
 app.get("/api/health", (request, response) => {
+  const db = getDatabaseDiagnostics();
+
   response.json({
     status: "ok",
     message: "DayTask habit API is running",
     dbReadyState: mongoose.connection.readyState,
+    dbLastError: db.lastError,
   });
 });
 
