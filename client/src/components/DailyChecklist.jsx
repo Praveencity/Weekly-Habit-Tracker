@@ -35,8 +35,12 @@ const getTaskTimingInfo = (task, now) => {
 };
 
 export const canStartTask = (task, now) => {
+  if (!task.startTime || !task.endTime) {
+    return { allowed: false, reason: "Set both start and end time first." };
+  }
+
   const timing = getTaskTimingInfo(task, now);
-  if (!timing) return { allowed: true }; // No restrictions if missing times
+  if (!timing) return { allowed: false, reason: "Invalid start/end time format." };
   
   const allowedStartLimit = new Date(timing.start.getTime() + timing.marginMs);
   
@@ -47,8 +51,12 @@ export const canStartTask = (task, now) => {
 };
 
 export const canEndTask = (task, now) => {
+  if (!task.startTime || !task.endTime) {
+    return { allowed: false, reason: "Set both start and end time first." };
+  }
+
   const timing = getTaskTimingInfo(task, now);
-  if (!timing) return { allowed: true };
+  if (!timing) return { allowed: false, reason: "Invalid start/end time format." };
   
   const allowedEndStart = new Date(timing.end.getTime() - timing.marginMs);
   
