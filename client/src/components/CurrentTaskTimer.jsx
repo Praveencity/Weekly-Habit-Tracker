@@ -1,7 +1,7 @@
 ﻿import { useEffect, useState } from "react";
-import { Clock, Square, Pause, Play } from "lucide-react";
+import { Clock } from "lucide-react";
 
-export default function CurrentTaskTimer({ activeTimerTask, activeTimerStart, onStopTimer, isTimerPaused, pausedTimerDuration, onPauseTimer }) {
+export default function CurrentTaskTimer({ activeTimerTask, activeTimerStart, isTimerPaused, pausedTimerDuration }) {
   const [now, setNow] = useState(Date.now());
 
   useEffect(() => {
@@ -38,26 +38,6 @@ export default function CurrentTaskTimer({ activeTimerTask, activeTimerStart, on
       </div>
       <div className="timer-countdown">
         {timeString}
-      </div>
-      <div style={{ marginLeft: 'auto', display: 'flex', gap: '8px' }}>
-        <button 
-          type="button" 
-          className="ghost-button" 
-          style={{ outline: 'none' }}
-          onClick={onPauseTimer}
-          title={isTimerPaused ? "Resume Timer" : "Pause Timer"}
-        >
-          {isTimerPaused ? <Play size={20} fill="currentColor" /> : <Pause size={20} fill="currentColor" />}
-        </button>
-        <button 
-          type="button" 
-          className="ghost-button danger" 
-          style={{ outline: 'none' }}
-          onClick={onStopTimer}
-          title="Stop Timer"
-        >
-          <Square size={20} fill="currentColor" />
-        </button>
       </div>
     </div>
   );

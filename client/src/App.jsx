@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { login, me, register } from "./api/auth";
 import { copyPlan, fetchLogs, fetchPlans, fetchSummary, saveLog, savePlan } from "./api/habits";
-import DailyChecklist from "./components/DailyChecklist";
+import DailyChecklist, { canStartTask } from "./components/DailyChecklist";
 import HabitCalendar from "./components/HabitCalendar";
 import HabitSummary from "./components/HabitSummary";
 import AnalyticalGraph from "./components/AnalyticalGraph";
@@ -159,6 +159,7 @@ export default function App() {
   const [activeTimerStart, setActiveTimerStart] = useState(null);
   const [pausedTimerDuration, setPausedTimerDuration] = useState(0);
   const [isTimerPaused, setIsTimerPaused] = useState(false);
+  const [startedTasksByDate, setStartedTasksByDate] = useState({});
 
   const resetAppState = () => {
     setPlans(getPlanMap());
@@ -170,7 +171,7 @@ export default function App() {
     setError("");
   };
 
-  // Auto-complete checked at 85% elapsed
+  // Auto-complete checked at 80% elapsed based on focused timer duration.
   useEffect(() => {
     if (!activeTimerTask || isTimerPaused || !activeTimerStart) return;
 
@@ -193,12 +194,11 @@ export default function App() {
       const totalDurationMs = endMs - startMs;
       
       if (msElapsed >= 0.80 * totalDurationMs) {
-        const selectedLog = logs.find((l) => l.date === selectedDate) || {};
-        const completedTaskIds = new Set(selectedLog.completedTaskIds || []);
+        const currentLog = logs.find((l) => l.date === selectedDate) || {};
+        const completedTaskIds = new Set(currentLog.completedTaskIds || []);
         if (!completedTaskIds.has(activeTimerTask._id)) {
-          // Fire completion
-          handleToggleTask(activeTimerTask);
-          toast.success(`${activeTimerTask.title} auto-completed (80% focused time)!`, { icon: '🎯', duration: 4000 });
+          handleCompleteTask(activeTimerTask);
+          toast.success(`${activeTimerTask.title} auto-completed (80% focused time)!`, { icon: "🎯", duration: 4000 });
         }
       }
     }, 10000); // Check every 10 seconds
@@ -390,23 +390,77 @@ export default function App() {
     }
   };
 
-  const handleToggleTask = async (task) => {
+  const handleCompleteTask = async (task) => {
     if (isGuest) return toast.error("Please login to complete tasks.");
     const completedTaskIds = new Set(selectedLog.completedTaskIds || []);
-    if (completedTaskIds.has(task._id)) {
-      completedTaskIds.delete(task._id);
-    } else {
+    if (!completedTaskIds.has(task._id)) {
       completedTaskIds.add(task._id);
-      toast.success(`${task.title} completed!`, { icon: '🎉', duration: 2000 });
-      if (activeTimerTask && activeTimerTask._id === task._id) {
-        setActiveTimerTask(null);
-        setActiveTimerStart(null);
-        setPausedTimerDuration(0);
-        setIsTimerPaused(false);
-      }
+      toast.success(`${task.title} completed!`, { icon: "🎉", duration: 2000 });
+    }
+
+    if (activeTimerTask && activeTimerTask._id === task._id) {
+      setActiveTimerTask(null);
+      setActiveTimerStart(null);
+      setPausedTimerDuration(0);
+      setIsTimerPaused(false);
     }
 
     await persistSelectedDateLog([...completedTaskIds]);
+  };
+
+  const handleTaskClick = (task) => {
+    if (isGuest) {
+      toast.error("Please login to use timer.");
+      return;
+    }
+
+    if ((selectedLog.completedTaskIds || []).includes(task._id)) {
+      return;
+    }
+
+    const now = new Date();
+    const today = getDateKey(now);
+
+    if (selectedDate !== today) {
+      toast.error("Timer can be used only for today's tasks.");
+      return;
+    }
+
+    if (activeTimerTask && activeTimerTask._id !== task._id) {
+      toast.error("Pause your current task before switching to another one.");
+      return;
+    }
+
+    if (activeTimerTask && activeTimerTask._id === task._id) {
+      if (isTimerPaused) {
+        setActiveTimerStart(Date.now());
+        setIsTimerPaused(false);
+      } else {
+        const elapsed = Date.now() - activeTimerStart;
+        setPausedTimerDuration((current) => current + elapsed);
+        setIsTimerPaused(true);
+      }
+      return;
+    }
+
+    const startedTaskIds = new Set(startedTasksByDate[selectedDate] || []);
+    if (!startedTaskIds.has(task._id)) {
+      const check = canStartTask(task, now);
+      if (!check.allowed) {
+        toast.error(check.reason);
+        return;
+      }
+
+      setStartedTasksByDate((current) => ({
+        ...current,
+        [selectedDate]: [...(current[selectedDate] || []), task._id],
+      }));
+    }
+
+    setActiveTimerTask(task);
+    setActiveTimerStart(Date.now());
+    setPausedTimerDuration(0);
+    setIsTimerPaused(false);
   };
 
   const handleSelectDate = (dateKey) => {
@@ -584,38 +638,17 @@ export default function App() {
                 activeTimerStart={activeTimerStart} 
                 isTimerPaused={isTimerPaused}
                 pausedTimerDuration={pausedTimerDuration}
-                onPauseTimer={() => {
-                  if (!isTimerPaused) {
-                    const elapsed = Date.now() - activeTimerStart;
-                    setPausedTimerDuration(pausedTimerDuration + elapsed);
-                    setIsTimerPaused(true);
-                  } else {
-                    setActiveTimerStart(Date.now());
-                    setIsTimerPaused(false);
-                  }
-                }}
-                onStopTimer={() => {
-                  setActiveTimerTask(null);
-                  setActiveTimerStart(null);
-                  setPausedTimerDuration(0);
-                  setIsTimerPaused(false);
-                }} 
               />
               <DailyChecklist
                 dateKey={selectedDate}
                 weekday={selectedDateWeekday}
                 tasks={selectedDayTasks}
                 log={selectedLog}
-                onToggleTask={handleToggleTask}
                 onEditPlan={handleEditSelectedDayPlan}
                 activeTimerTask={activeTimerTask}
-                onStartTimer={(task) => {
-                  if (isGuest) return toast.error("Please login to use timer.");
-                  setActiveTimerTask(task);
-                  setActiveTimerStart(Date.now());
-                  setPausedTimerDuration(0);
-                  setIsTimerPaused(false);
-                }}
+                isTimerPaused={isTimerPaused}
+                startedTaskIds={new Set(startedTasksByDate[selectedDate] || [])}
+                onTaskClick={handleTaskClick}
               />
             </div>
 

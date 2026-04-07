@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Lock, Play, Clock, ArrowRight } from "lucide-react";
-import { toast } from "react-hot-toast";
+import { Lock, Play, Pause, CheckCircle2, Clock, ArrowRight } from "lucide-react";
 import { formatDateLabel, formatTimeRangeLabel, getDateKey } from "../utils/date";
 
 const parseTimeToDate = (timeStr, baseDate) => {
@@ -168,7 +167,17 @@ const statusLabels = {
   complete: "All tasks done",
 };
 
-export default function DailyChecklist({ dateKey, weekday, tasks, log, onToggleTask, onEditPlan, activeTimerTask, onStartTimer }) {
+export default function DailyChecklist({
+  dateKey,
+  weekday,
+  tasks,
+  log,
+  onEditPlan,
+  activeTimerTask,
+  isTimerPaused,
+  startedTaskIds,
+  onTaskClick,
+}) {
   const [currentTime, setCurrentTime] = useState(() => new Date());
 
   useEffect(() => {
@@ -208,9 +217,18 @@ export default function DailyChecklist({ dateKey, weekday, tasks, log, onToggleT
         <span>tasks completed</span>
       </div>
 
-      <div className="timing-instruction" style={{ fontSize: "0.85rem", color: "var(--muted)", marginBottom: "1rem", lineHeight: "1.4" }}>
-        <strong>Task Timing:</strong> Tasks must be started within their first 10% duration and can only be completed in their final 10%. They expire if missed. You can also start a timer for auto-completion (the 80% rule: tasks auto-complete when focused time reaches 80% of duration)!
-      </div>
+      <details className="timing-instruction">
+        <summary>
+          <strong>How task timing works</strong>
+        </summary>
+        <div className="timing-rules-list">
+          <p>• Tap a task to start it, but only within the first 10% of its scheduled duration.</p>
+          <p>• You cannot mark tasks done manually. Completion is timer-based only.</p>
+          <p>• Tap the same running task again to pause, and tap again to resume.</p>
+          <p>• A task is auto-completed when focused timer time reaches 80% of its duration.</p>
+          <p>• If the first 10% start window is missed, the task is auto-locked as missed.</p>
+        </div>
+      </details>
 
       {tasks.length === 0 ? (
         <p className="empty-copy">No tasks are scheduled for this weekday yet.</p>
@@ -218,76 +236,51 @@ export default function DailyChecklist({ dateKey, weekday, tasks, log, onToggleT
         <div className="daily-task-list">
           {tasks.map((task) => {
             const checked = completedTaskIds.has(task._id);
-            const expired = !checked && isTaskExpired(task, dateKey, currentTime);
+            const timing = getTaskTimingInfo(task, currentTime);
+            const hasStartedInWindow = startedTaskIds?.has(task._id);
+            const missedStartWindow =
+              !checked &&
+              !hasStartedInWindow &&
+              timing &&
+              dateKey === getDateKey(currentTime) &&
+              currentTime.getTime() > timing.start.getTime() + timing.marginMs;
+            const expired = !checked && (isTaskExpired(task, dateKey, currentTime) || missedStartWindow);
             const isActiveTimer = activeTimerTask && activeTimerTask._id === task._id;
 
             return (
-              <label 
+              <button
+                type="button"
                 key={task._id} 
                 className={`daily-task ${checked ? "checked" : ""} ${expired ? "expired" : ""} ${isActiveTimer ? "timer-running" : ""}`}
                 style={expired ? { opacity: 0.6, cursor: "not-allowed" } : undefined}
+                onClick={() => {
+                  if (expired || checked) return;
+                  onTaskClick(task);
+                }}
+                disabled={expired}
               >
                 {expired ? (
                   <div style={{ padding: "3px 0 0 2px", color: "var(--muted)" }}>
                     <Lock size={14} />
                   </div>
+                ) : checked ? (
+                  <div style={{ padding: "3px 0 0 2px", color: "var(--success)" }}>
+                    <CheckCircle2 size={16} />
+                  </div>
+                ) : isActiveTimer ? (
+                  <div style={{ padding: "3px 0 0 2px", color: "var(--accent-2)" }}>
+                    {isTimerPaused ? <Play size={14} /> : <Pause size={14} />}
+                  </div>
                 ) : (
-                  <input
-                    type="checkbox"
-                    checked={checked}
-                    onChange={() => {
-                      if (!checked) {
-                        const timing = getTaskTimingInfo(task, currentTime);
-                        if (timing) {
-                          const today = getDateKey(currentTime);
-                          if (dateKey === today) {
-                            const allowedEndStart = new Date(timing.end.getTime() - timing.marginMs);
-                            if (currentTime.getTime() < allowedEndStart.getTime()) {
-                              toast.error("Too early to complete. Wait for the final 10% of the session!");
-                              return;
-                            }
-                          }
-                        }
-                      }
-                      onToggleTask(task);
-                    }}
-                    disabled={expired || isActiveTimer}
-                  />
+                  <div style={{ padding: "3px 0 0 2px", color: "var(--muted)" }}>
+                    <Play size={14} />
+                  </div>
                 )}
                 <span className="daily-task-text">
                   <strong>{task.title}</strong>
-                  <span>{formatTimeRangeLabel(task.startTime, task.endTime, task.time) + (expired ? " · Missed" : "") + (task.notes ? ` · ${task.notes}` : "")}</span>
+                  <span>{formatTimeRangeLabel(task.startTime, task.endTime, task.time) + (expired ? " · Missed / Locked" : "") + (task.notes ? ` · ${task.notes}` : "")}</span>
                 </span>
-                {!checked && !expired && !isActiveTimer && onStartTimer && (
-                  <button 
-                    type="button" 
-                    className="play-timer-button" 
-                    title="Start Focused Timer"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                            const timing = getTaskTimingInfo(task, currentTime);
-                        if (timing) {
-                          const today = getDateKey(currentTime);
-                          if (dateKey === today) {
-                            const allowedStartEnd = new Date(timing.start.getTime() + timing.marginMs);
-                            if (currentTime.getTime() < timing.start.getTime()) {
-                              toast.error("Too early to start this task.");
-                              return;
-                            }
-                            if (currentTime.getTime() > allowedStartEnd.getTime()) {
-                              toast.error("You missed the initial 10% starting window.");
-                              return;
-                            }
-                          }
-                        }
-                        onStartTimer(task);
-                      }}
-                  >
-                    <Play size={16} fill="currentColor" />
-                  </button>
-                )}
-              </label>
+              </button>
             );
           })}
         </div>

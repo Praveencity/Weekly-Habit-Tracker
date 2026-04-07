@@ -610,6 +610,39 @@ textarea {
   font-size: 2rem;
 }
 
+.timing-instruction {
+  margin-bottom: 1rem;
+  border: 1px solid var(--row-border);
+  border-radius: 12px;
+  background: var(--row-bg);
+  padding: 10px 12px;
+  color: var(--muted);
+}
+
+.timing-instruction summary {
+  cursor: pointer;
+  list-style: none;
+  font-size: 0.9rem;
+}
+
+.timing-instruction summary::-webkit-details-marker {
+  display: none;
+}
+
+.timing-rules-list {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+
+.timing-rules-list p {
+  margin: 0 0 6px;
+}
+
+.timing-rules-list p:last-child {
+  margin-bottom: 0;
+}
+
 .daily-task-list {
   display: grid;
   gap: 12px;
@@ -624,6 +657,13 @@ textarea {
   border-radius: 18px;
   background: var(--row-bg);
   border: 1px solid var(--row-border);
+  text-align: left;
+  width: 100%;
+  cursor: pointer;
+}
+
+.daily-task:disabled {
+  cursor: not-allowed;
 }
 
 .daily-task.timer-running {
