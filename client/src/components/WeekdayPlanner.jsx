@@ -123,7 +123,7 @@ export default function WeekdayPlanner({
             <div className="task-time-range">
               <input
                 type="time"
-                step="900"
+                step="60"
                 value={toTimeInputValue(task.startTime || task.time)}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -136,7 +136,7 @@ export default function WeekdayPlanner({
               <span className="time-separator"><ArrowRight size={14} /></span>
               <input
                 type="time"
-                step="900"
+                step="60"
                 value={toTimeInputValue(task.endTime)}
                 onChange={(event) => updateTask(task._id, "endTime", event.target.value)}
                 className="task-time-input"
